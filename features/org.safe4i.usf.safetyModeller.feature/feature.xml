@@ -2,7 +2,7 @@
 <feature
       id="org.safe4i.usf.safetyModeller.feature"
       label="SafetyModeller"
-      version="0.9.3.qualifier"
+      version="1.0.0.qualifier"
       provider-name="ScopeSET">
 
    <description url="http://www.example.com/description">

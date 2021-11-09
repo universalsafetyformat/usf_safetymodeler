@@ -3,7 +3,7 @@ Automatic-Module-Name: org.safe4i.usf.transformation.language.ui
 Bundle-ManifestVersion: 2
 Bundle-Name: org.safe4i.usf.transformation.language.ui
 Bundle-Vendor: ScopeSET
-Bundle-Version: 0.9.3.qualifier
+Bundle-Version: 1.0.0.qualifier
 Bundle-SymbolicName: org.safe4i.usf.transformation.language.ui;singleton:=true
 Bundle-ActivationPolicy: lazy
 Require-Bundle: org.safe4i.usf.transformation.language,

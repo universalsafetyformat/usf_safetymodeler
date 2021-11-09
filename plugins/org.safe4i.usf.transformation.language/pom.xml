@@ -6,7 +6,7 @@
 	<parent>
 		<groupId>org.safe4i.usf</groupId>
 		<artifactId>org.safe4i.usf.safetyModeller.parent</artifactId>
-		<version>0.9.3-SNAPSHOT</version>
+		<version>1.0.0-SNAPSHOT</version>
 		<relativePath>../../releng/org.safe4i.usf.safetyModeller.parent/pom.xml</relativePath>
 	</parent>
 

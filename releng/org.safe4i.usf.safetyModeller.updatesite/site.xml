@@ -3,7 +3,7 @@
    <description name="SafetyModeler" url="https://universalsafetyformat.github.io/tools/safetymodeler/">
       SafetyModeler is a graphical editor to view and create USF models provided as an Eclipse plugin. It allows to create functional block models with data and control flows, definition of data types as well as safety measures to secure the functional model.
    </description>
-   <feature url="features/org.safe4i.usf.safetyModeller.feature_0.9.3.qualifier.jar" id="org.safe4i.usf.safetyModeller.feature" version="0.9.3.qualifier">
+   <feature url="features/org.safe4i.usf.safetyModeller.feature_1.0.0.qualifier.jar" id="org.safe4i.usf.safetyModeller.feature" version="1.0.0.qualifier">
       <category name="org.safe4i.usf"/>
    </feature>
    <category-def name="org.safe4i.usf" label="SafetyModeler">
