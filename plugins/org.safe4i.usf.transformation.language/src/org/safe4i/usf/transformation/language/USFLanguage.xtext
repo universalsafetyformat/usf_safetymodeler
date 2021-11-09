@@ -1,0 +1,204 @@
+/**
+ * Copyright (c) 2021 ScopeSET Technology Deutschland GmbH (https://www.scopeset.de) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ * 
+ * SPDX-License-Identifier: EPL-2.0
+ */
+grammar org.safe4i.usf.transformation.language.USFLanguage with org.eclipse.xtext.common.Terminals  
+
+import "https://www.universalsafetyformat.org/transformation"
+import "http://www.eclipse.org/emf/2002/Ecore" as ecore
+import "https://www.universalsafetyformat.org/parameter" as parameter
+import "https://www.universalsafetyformat.org/block" as block
+
+Transformation returns Transformation hidden(WS, ML_COMMENT, SL_COMMENT):
+	{Transformation}
+	'transform' name=ID '(' 
+		BEGIN
+		(parameters+=Parameter ("," parameters+=Parameter)*)? 
+	 ')'
+	(':' type=TransformationType)? "{"
+	END
+	'PRECONDITION'
+	BEGIN
+	(preconditions+=Expression)*
+	END
+	'RULES'
+	BEGIN
+	(content+=Expression)*
+	END
+	('RETURN'
+	BEGIN
+	output=Expression
+	END)?
+	'}';
+
+terminal BEGIN:
+	'synthetic:BEGIN';
+
+terminal END:
+	'synthetic:END';
+
+Expression returns Expression:
+	AssignmentOrVariableDeclaration |
+	NullLiteral |
+	BooleanLiteral | ForLoopExpression| IfExpression|
+	ConcatenationExpression;
+
+TransformationType returns TransformationType:
+	TypeBasedTransformationType | EClassBasedTransformationType | ListBasedTransformationType;
+
+TypeBasedTransformationType returns TypeBasedTransformationType:
+	type=TransformationTypes;
+
+EClassBasedTransformationType returns EClassBasedTransformationType:
+	{EClassBasedTransformationType}
+	type=[ecore::EClass|ID];
+
+ListBasedTransformationType returns ListBasedTransformationType:
+	{ListBasedTransformationType}
+	'List' '<' type=[ecore::EClass|ID] '>';
+
+Parameter returns Parameter:
+	TypeBasedParameter | EClassBasedParameter | ListBasedParameter;
+
+TypeBasedParameter returns TypeBasedParameter:
+	{TypeBasedParameter}
+	name=ID ':' type=TransformationTypes;
+
+EClassBasedParameter returns EClassBasedParameter:
+	{EClassBasedParameter}
+	name=ID ':' type=[ecore::EClass|ID];
+
+ListBasedParameter returns ListBasedParameter:
+	{ListBasedParameter}
+	name=ID ':' 'List' '<' type=[ecore::EClass|ID] '>';
+
+ConcatenationExpression returns Expression:
+	Primary ({ConcatenationExpression.left=current} '+' right=Primary)*;
+
+Primary returns Expression:
+	StringLiteral |
+	NumberLiteral |
+	TypedMemberCallExpression |
+	FeatureCallExpression |
+	OperationCallExpression |
+	PortDirectionLiteral
+	;
+
+StringLiteral returns StringLiteral:
+	value=STRING;
+
+NumberLiteral returns NumberLiteral:
+	value=Number;
+
+NullLiteral returns NullLiteral:
+	{NullLiteral} 'null';
+
+BooleanLiteral returns BooleanLiteral:
+	{BooleanLiteral} ('false' | isTrue?='true');
+	
+PortDirectionLiteral returns PortDirectionLiteral:
+	{PortDirectionLiteral} direction=PortDirection
+;
+
+Number hidden():
+	INT ('.' INT)?;
+
+FeatureCallExpression returns FeatureCallExpression:
+	context=[TypedMember] '.'+ structuralFeature=[ecore::ETypedElement|ID] ('(' (parameterValues+=Expression (","
+	parameterValues+=Expression)*)?')')?;
+
+OperationCallExpression returns OperationCallExpression:
+	{OperationCallExpression}
+	operation=[ecore::EOperation|ID] '(' (parameterValues+=Expression ("," parameterValues+=Expression)*)?
+	')';
+
+
+AssignmentOrVariableDeclaration returns Expression:
+	VariableDeclaration | AssignmentExpression
+;
+
+VariableDeclaration returns VariableDeclaration:
+	{VariableDeclaration}
+	(writeable?='var'|'val') (=>(type=TransformationType name=ID) | name=ID) ('=' rhs=Expression)?;
+
+AssignmentExpression returns AssignmentExpression:
+	{AssignmentExpression} typeMember=[VariableDeclaration]  '=' value=Expression
+;
+
+TypedMemberCallExpression returns TypedMemberCallExpression:
+	{TypedMemberCallExpression}
+	typeMember=[TypedMember];
+	
+
+ForLoopExpression returns ForLoopExpression: 
+	=>({ForLoopExpression}
+	'for' '(' declaredParam=Parameter 'in'  ) forExpression=Expression ')' '{'
+			(BEGIN
+			(eachExpression+=Expression)* 
+			END)?  '}'
+;
+
+
+IfExpression returns IFExpression:
+	{IFExpression}
+	'if' '(' condition=BooleanExpression ')'  '{'
+			(BEGIN
+			(then+=Expression)* 
+			END )?
+			'}'
+	(=>'else' '{'
+		(BEGIN
+			(else+=Expression)* 
+		END )?
+		'}'
+	)?
+;
+
+BooleanExpression returns Expression:
+	OrBooleanExpression
+;
+
+OrBooleanExpression returns Expression:
+	AndBooleanExpression (({OrBooleanExpression.left=current} "||") right=AndBooleanExpression)*
+;
+
+AndBooleanExpression returns Expression:
+	ComparisonBooleanExpression (({AndBooleanExpression.left=current} "&&") right=ComparisonBooleanExpression)*
+;
+
+ComparisonBooleanExpression returns Expression:
+	BooleanNegationExpression ({ComparisonBooleanExpression.left=current} operator=("<"|"<="|"=="|">="|">"|"!=") right=BooleanNegationExpression)*
+;
+
+BooleanNegationExpression returns Expression:
+  {BooleanNegationExpression} => (isNegate?='!')?  expression=Atomic
+;
+
+
+Atomic returns Expression:
+	'(' Expression ')' |
+	StringLiteral | BooleanLiteral| NullLiteral| PortDirectionLiteral |
+	NumberLiteral |FeatureCallExpression | TypedMemberCallExpression
+;
+
+
+
+enum TransformationTypes returns parameter::TransformationPrimitiveType:
+		Integer = 'integer' | Float = 'float'| String = 'String' | Boolean = 'boolean' | Void= "void";
+
+
+enum PortDirection returns block::PortDirection:
+	IN = 'PortDirection.IN' | OUT = 'PortDirection.OUT' | INOUT = 'PortDirection.INOUT' | UNSET = 'PortDirection.UNSET'
+;
+
+//TransformationCallRule returns TransformationCallRule:
+//	name='transformation_CallRule'
+//	'('
+//	'transformation' transformation=[Transformation|QualifiedName]
+//	('inputs' '[' inputs+=Expression ("," inputs+=Expression)* ']')?
+//	('parameters' '[' parameters+=Expression ("," parameters+=Expression)* ']')?
+//	')';

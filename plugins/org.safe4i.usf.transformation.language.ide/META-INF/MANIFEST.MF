@@ -1,0 +1,17 @@
+Manifest-Version: 1.0
+Automatic-Module-Name: org.safe4i.usf.transformation.language.ide
+Bundle-ManifestVersion: 2
+Bundle-Name: org.safe4i.usf.transformation.language.ide
+Bundle-Vendor: ScopeSET
+Bundle-Version: 0.9.3.qualifier
+Bundle-SymbolicName: org.safe4i.usf.transformation.language.ide;singleton:=true
+Bundle-ActivationPolicy: lazy
+Require-Bundle: org.safe4i.usf.transformation.language,
+ org.safe4i.usf.core,
+ org.eclipse.xtext.ide,
+ org.eclipse.xtext.xbase.ide,
+ org.antlr.runtime;bundle-version="[3.2.0,3.2.1)"
+Bundle-RequiredExecutionEnvironment: JavaSE-11
+Export-Package: org.safe4i.usf.transformation.language.ide.contentassist.antlr,
+ org.safe4i.usf.transformation.language.ide.contentassist.antlr.lexer,
+ org.safe4i.usf.transformation.language.ide.contentassist.antlr.internal

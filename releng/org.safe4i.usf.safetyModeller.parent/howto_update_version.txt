@@ -1,0 +1,4 @@
+export MAVEN_OPTS="-Xmx512M" 
+mvn org.eclipse.tycho:tycho-versions-plugin:0.22.0:set-version -DnewVersion=0.6.0-SNAPSHOT
+
+NOTE: also make sure the version of the referenced target platform plugin is updated in this parent pom!

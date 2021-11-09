@@ -1,0 +1,253 @@
+/*******************************************************************************
+* Copyright (c) 2021 ScopeSET Technology Deutschland GmbH (https://www.scopeset.de) and others.
+* This program and the accompanying materials are made available under the
+* terms of the Eclipse Public License 2.0 which is available at
+* http://www.eclipse.org/legal/epl-2.0.
+* 
+* SPDX-License-Identifier: EPL-2.0
+*******************************************************************************/
+ 
+@Ecore(nsURI="https://www.universalsafetyformat.org/transformation")
+@GenModel(prefix="Transformation", modelDirectory="org.safe4i.usf.transformation.language.model/src-gen", complianceLevel="8.0", copyrightText="Copyright (c) 2021 ScopeSET Technology Deutschland GmbH (https://www.scopeset.de) and others.\nThis program and the accompanying materials are made available under the\nterms of the Eclipse Public License 2.0 which is available at\nhttp://www.eclipse.org/legal/epl-2.0.\n\nSPDX-License-Identifier: EPL-2.0")
+package org.safe4i.usf.model.transformation
+
+
+import org.eclipse.emf.ecore.EClass
+import org.eclipse.emf.ecore.EOperation
+import org.eclipse.emf.ecore.ETypedElement
+import org.safe4i.usf.core.internal.USFActivator
+import org.safe4i.usf.core.usfmodel.block.Block
+import org.safe4i.usf.core.usfmodel.block.BlocksFactory
+import org.safe4i.usf.core.usfmodel.block.Port
+import org.safe4i.usf.core.usfmodel.block.PortDirection
+import org.safe4i.usf.core.usfmodel.block.PortInstance
+import org.safe4i.usf.core.usfmodel.common.IModelContent
+import org.safe4i.usf.core.usfmodel.common.NamedElement
+import org.safe4i.usf.core.usfmodel.parameter.TransformationPrimitiveType
+
+/**
+ * A transformation containing of a signature and a list of expression.
+ */
+class Transformation extends NamedElement, IModelContent {
+	contains Parameter[] parameters
+	// the return type of a transformation (might be void)
+	contains TransformationType ^type
+	// preconditions which must be true	
+	contains Expression[] preconditions
+	// an ordered list of Expression (the "body" of a transformation)
+	contains Expression[] content
+	// the transformation's output (or none if the return type is void)
+	contains Expression output // optional
+}
+
+/**
+ * Baseclass for Parameter and Variables
+ */
+abstract class TypedMember {
+}
+
+/**
+ * A transformation parameter
+ */
+abstract class Parameter extends NamedElement, TypedMember {
+}
+
+/**
+ * A parameter of a transformation.<p/>
+ */
+class TypeBasedParameter extends Parameter {
+	TransformationPrimitiveType ^type
+}
+
+/**
+ * A Class Reference parameter of a transformation
+ */
+class EClassBasedParameter extends Parameter {
+	refers EClass[1] ^type
+}
+
+class ListBasedParameter extends GenericListType, Parameter, ListType {
+}
+
+/**
+ * A transformation type (EClass or Type based)
+ */
+abstract class TransformationType {
+}
+
+/**
+ * A transformation parameter
+ */
+class EClassBasedTransformationType extends TransformationType {
+	refers EClass[1] ^type
+}
+
+class ListBasedTransformationType extends TransformationType, GenericListType {
+}
+
+/**
+ * A transformation parameter
+ */
+class TypeBasedTransformationType extends TransformationType {
+	TransformationPrimitiveType ^type
+}
+
+/**
+ * The abstract base class for all expressions.
+ */
+abstract class Expression {
+}
+
+/**
+ * A definition of a named value.<p/>
+ * 
+ * The value is final (it is not modifiable).
+ */
+class VariableDeclaration extends Expression, TypedMember, NamedElement, ListType {
+	boolean writeable
+	contains TransformationType[0..1] ^type
+	contains Expression rhs
+}
+
+class StringLiteral extends Expression {
+	String value
+}
+
+class NumberLiteral extends Expression {
+	String value
+}
+
+class NullLiteral extends Expression {
+}
+
+class BooleanLiteral extends Expression {
+	boolean isTrue
+}
+
+class PortDirectionLiteral extends Expression {
+	PortDirection direction
+}
+
+
+abstract class ListType {
+}
+
+class ForLoopExpression extends Expression {
+	contains Parameter[0..1] declaredParam
+	contains Expression[0..1] forExpression
+	contains Expression[0..*] eachExpression
+}
+
+class IFExpression extends Expression{
+	contains Expression condition
+	contains Expression[] then
+	contains Expression[] ^else
+}
+
+class OrBooleanExpression extends Expression{
+	contains Expression[1] left
+	contains Expression[1] right
+}
+
+class AndBooleanExpression extends Expression{
+	contains Expression[1] left
+	contains Expression[1] right
+}
+
+class ComparisonBooleanExpression extends Expression{
+	contains Expression[1] left
+	contains Expression[1] right
+	String operator
+}
+
+class BooleanNegationExpression extends Expression{
+	contains Expression[1] expression
+	boolean isNegate
+}
+
+/**
+ * A call to a EAttribute, EReference or an EOperation 
+ */
+class FeatureCallExpression extends Expression {
+	refers TypedMember[1] context
+//	EStructuralFeature
+	refers ETypedElement[1] structuralFeature
+	contains Expression[0..*] parameterValues
+}
+
+/**
+ * A operation call to an EOperation 
+ */
+class OperationCallExpression extends Expression {
+	refers EOperation operation
+	contains Expression[] parameterValues
+}
+
+class ConcatenationExpression extends Expression {
+	contains Expression[1] left
+	contains Expression[1] right
+}
+
+/**
+ * A call to declared TypedMembers
+ */
+class TypedMemberCallExpression extends Expression {
+	refers TypedMember[1] typeMember
+}
+
+/**
+ * Operation for calling another transformation.</p>
+ * 
+ * This allows to modularize transformations and reuse them.
+ */
+class TransformationCallExpression extends Expression {
+	refers Transformation[1] transformation
+	contains Expression[] parameterValues
+}
+
+
+/**
+ * A representation of a list element for the transformation language
+ */
+class GenericListType {
+	refers EClass[1] ^type
+	op int size()
+	op Object ^get(int index)
+	op void add(Object element)
+}
+
+
+class AssignmentExpression extends Expression{
+	refers TypedMember[1] typeMember
+	contains Expression[1] value
+} 
+
+/**
+ * Utility class which provides some generic helper methods
+ */
+class TransformationUtils{
+	op PortInstance newPortInstance(Block block, Port port) {
+		var portInstance = BlocksFactory.eINSTANCE.createPortInstance();
+		portInstance.block = block;
+		portInstance.port = port;
+		return portInstance;
+	}
+	op void log(Object object) {
+		if (USFActivator.instance !== null) {
+			// OSGI runtime is active we use the bundle logger
+			USFActivator.instance.log.info(object.toString);
+		} else {
+			System.out.print(object);
+		}
+	}
+	op void logError(Object object) {
+		if (USFActivator.instance !== null) {
+			// OSGI runtime is active we use the bundle logger
+			USFActivator.instance.log.error(object.toString);
+		} else {
+			System.err.print(object);
+		}
+	}
+}
+
+

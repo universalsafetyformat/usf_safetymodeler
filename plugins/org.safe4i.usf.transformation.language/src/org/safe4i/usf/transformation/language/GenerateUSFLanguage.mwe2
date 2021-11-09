@@ -1,0 +1,88 @@
+/**
+ * Copyright (c) 2021 ScopeSET Technology Deutschland GmbH (https://www.scopeset.de) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ * 
+ * SPDX-License-Identifier: EPL-2.0
+ */
+module org.safe4i.usf.transformation.language.GenerateUSFLanguage
+
+import org.eclipse.xtext.xtext.generator.*
+import org.eclipse.xtext.xtext.generator.model.project.*
+import org.eclipse.xtext.xtext.generator.*
+import org.eclipse.xtext.xtext.generator.model.project.*
+import org.eclipse.emf.mwe.utils.*
+import org.eclipse.xtext.xtext.generator.ui.codemining.CodeMiningFragment
+
+var rootPath = ".."
+
+Workflow {
+	component = XtextGenerator {
+		configuration = {
+			project = StandardProjectConfig {
+				baseName = "org.safe4i.usf.transformation.language"
+				rootPath = rootPath
+				eclipsePlugin = {
+					enabled = true
+				}
+				createEclipseMetaData = true
+			}
+			code = {
+				encoding = "UTF-8"
+				lineDelimiter = "\r\n"
+				fileHeader = "/*******************************************************************************
+* Copyright (c) 2021 ScopeSET Technology Deutschland GmbH (https://www.scopeset.de) and others.
+* This program and the accompanying materials are made available under the
+* terms of the Eclipse Public License 2.0 which is available at
+* http://www.eclipse.org/legal/epl-2.0.
+* 
+* SPDX-License-Identifier: EPL-2.0
+*******************************************************************************/"
+				preferXtendStubs = false
+			}
+		}
+		language = StandardLanguage {
+			name = "org.safe4i.usf.transformation.language.USFLanguage"
+			fileExtensions = "usft"
+			referencedResource = "platform:/resource/org.safe4i.usf.core/model/USF_block.xcore"
+			referencedResource = "platform:/resource/org.safe4i.usf.core/model/USF_common.xcore"
+			referencedResource = "platform:/resource/org.safe4i.usf.core/model/USF_controlFlow.xcore"
+			referencedResource = "platform:/resource/org.safe4i.usf.core/model/USF_errorHandling.xcore"
+			referencedResource = "platform:/resource/org.safe4i.usf.core/model/USF_parameter.xcore"
+			referencedResource = "platform:/resource/org.safe4i.usf.core/model/USF_portTemplate.xcore"
+			referencedResource = "platform:/resource/org.safe4i.usf.core/model/USF_safetypattern.xcore"
+			referencedResource = "platform:/resource/org.safe4i.usf.transformation.language.model/model/USF_transformation.xcore"
+			fragment = ecore2xtext.Ecore2XtextValueConverterServiceFragment2 auto-inject {}
+
+			formatter = {
+				generateStub = true
+				generateXtendStub = true
+			}
+
+			serializer = {
+				generateStub = false
+			}
+			validator = {
+			// composedCheck = "org.eclipse.xtext.validation.NamesAreUniqueValidator"
+			// Generates checks for @Deprecated grammar annotations, an IssueProvider and a corresponding PropertyPage
+				generateDeprecationValidation = true
+				generateXtendStub = true
+			}
+			generator = {
+				generateStub = true
+				generateXtendStub = true
+			}
+			scopeProvider = {
+				generateXtendStub = true
+			}
+			fragment = CodeMiningFragment {
+				generateStub = true
+				generateXtendStub = false
+				
+			}
+			
+
+		}
+	}
+}

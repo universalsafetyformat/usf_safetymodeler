@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?pde version="3.8"?>
+<target name="USF Target Platform" sequenceNumber="1013">
+  <locations>
+ 	 <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
+      <repository id="2020-12" location="https://download.eclipse.org/releases/2020-12"/>
+		<unit id="org.eclipse.sdk.feature.group" version="4.18.0.v20201202-1800"/>
+		<unit id="org.eclipse.pde.feature.group" version="3.14.600.v20201202-1800"/>
+		<unit id="org.eclipse.emf.sdk.feature.group" version="2.24.0.v20200917-1439"/>
+		<unit id="org.eclipse.emf.validation.sdk.feature.group" version="1.12.2.202008210805"/>
+		<unit id="org.eclipse.emf.ecore.xcore.sdk.feature.group" version="1.16.0.v20201105-0712"/>
+		<unit id="org.eclipse.xtend.sdk.feature.group" version="2.24.0.v20201130-1016"/>
+		<unit id="org.eclipse.m2m.qvt.oml.sdk.feature.group" version="3.10.2.v20200609-1812"/>
+		<unit id="org.eclipse.sirius.specifier.feature.group" version="6.4.0.202011190936"/>
+	    <unit id="org.eclipse.emf.mwe2.runtime.sdk.feature.group" version="2.12.0.v20201119-2018"/>
+	    <unit id="org.eclipse.emf.mwe.sdk.feature.group" version="1.6.0.v20201119-2018"/>
+	    <unit id="org.eclipse.emf.mwe2.language.sdk.feature.group" version="2.12.0.v20201119-2018"/>
+    </location>
+	  <location includeAllPlatforms="false" includeConfigurePhase="false" includeMode="planner" includeSource="true" type="InstallableUnit">
+		  <repository location="https://universalsafetyformat.github.io/usf_metamodel_p2/"/>
+		  <unit id="org.safe4i.usf.core.feature.feature.group" version="1.0.0.202111091050"/>
+	  </location>
+  </locations>
+</target>

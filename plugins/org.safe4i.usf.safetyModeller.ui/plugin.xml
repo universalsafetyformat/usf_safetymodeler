@@ -1,0 +1,181 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+
+<!--
+-->
+
+<plugin>
+   <extension
+         point="org.eclipse.ui.newWizards">
+      <category
+            id="org.safe4i.usf.safetyModeller.ui.usf"
+            name="USF">
+      </category>
+      <wizard
+            category="org.safe4i.usf.safetyModeller.ui.usf"
+            class="org.safe4i.usf.safetyModeller.ui.wizard.USFNewProjectWizard"
+            icon="icons/placeholder.png"
+            id="org.safe4i.usf.safetyModeller.ui.wizard"
+            name="USF Project"
+            project="true">
+      </wizard>
+   </extension>
+   <extension
+         id="usfNature"
+         point="org.eclipse.core.resources.natures">
+      <runtime>
+         <run
+               class="org.safe4i.usf.safetyModeller.ui.project.USFProjectNature">
+         </run>
+      </runtime>
+   </extension>
+   <extension
+         point="org.eclipse.ui.ide.projectNatureImages">
+      <image
+            icon="icons/8x8/shield.png"
+            id="de.scopeset.application.AnalysisNature"
+            natureId="org.safe4i.usf.safetyModeller.ui.usfNature">
+      </image>
+   </extension>
+   <extension
+         point="org.eclipse.ui.decorators">
+      <decorator
+            adaptable="true"
+            class="org.safe4i.usf.safetyModeller.ui.decorator.USFProjectDecorator"
+            id="org.safe4i.usf.safetyModeller.ui.decorator"
+            label="USF Project Decorator"
+            lightweight="true"
+            state="true">
+      </decorator>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            allPopups="false"
+            locationURI="popup:org.eclipse.ui.popup.any?before=additions">
+         <menu
+               icon="icons/16x16/icons/shield.png"
+               label="USF">
+            <menu
+                  icon="icons/16x16/icons/package.png"
+                  label="USF Model">
+               <command
+                     commandId="org.safe4i.usf.safetyModeller.ui.command.newmodel"
+                     label="New Model"
+                     style="push">
+               </command>
+            </menu>
+            <command
+                  commandId="org.safe4i.usf.safetyModeller.ui.command.cleanModel"
+                  label="Clean Model"
+                  style="push">
+               <visibleWhen
+                     checkEnabled="false">
+                  <with
+                        variable="selection">
+                     <iterate
+                           ifEmpty="false"
+                           operator="and">
+                        <reference
+                              definitionId="org.safe4i.usf.safetyModeller.ui.USFFileExtension">
+                        </reference>
+                        <adapt
+                              type="org.eclipse.core.resources.IResource">
+                           <test
+                                 property="org.eclipse.core.resources.projectNature"
+                                 value="org.safe4i.usf.safetyModeller.ui.usfNature">
+                           </test>
+                        </adapt>
+                     </iterate>
+                  </with>
+               </visibleWhen>
+            </command>
+            <command
+                  commandId="org.safe4i.usf.safetyModeller.ui.inferTypes"
+                  label="Infer Types"
+                  style="push">
+            </command>
+            <command
+                  commandId="org.safe4i.usf.safetyModeller.ui.showTransformation"
+                  label="Show Transformation"
+                  style="push">
+               <visibleWhen
+                     checkEnabled="true">
+               </visibleWhen>
+            </command>
+            <command
+                  commandId="org.safe4i.usf.safetyModeller.ui.executeTransformation"
+                  label="Execute Transformation"
+                  style="push">
+               <visibleWhen
+                     checkEnabled="true">
+               </visibleWhen>
+            </command>
+         </menu>
+      </menuContribution>
+   </extension>
+
+<extension
+    point="org.eclipse.core.expressions.definitions">
+    <definition
+        id="org.safe4i.usf.safetyModeller.ui.project.hasNature">
+        <adapt
+            type="org.eclipse.core.resources.IProject">
+            <test
+                property="org.eclipse.core.resources.projectNature"
+                value="org.safe4i.usf.safetyModeller.ui.usfNature">
+            </test>
+        </adapt>
+    </definition>
+    <definition
+          id="org.safe4i.usf.safetyModeller.ui.USFFileExtension">
+       <adapt
+             type="org.eclipse.core.resources.IResource">
+          <test
+                property="org.eclipse.core.resources.extension"
+                value="aird">
+          </test>
+       </adapt>
+    </definition>
+</extension>
+<extension
+      point="org.eclipse.ui.commands">
+   <command
+         defaultHandler="org.safe4i.usf.safetyModeller.ui.handler.CreateNewModelHandler"
+         id="org.safe4i.usf.safetyModeller.ui.command.newmodel"
+         name="New Model">
+   </command>
+   <command
+         defaultHandler="org.safe4i.usf.safetyModeller.ui.handler.InferTypesHandler"
+         id="org.safe4i.usf.safetyModeller.ui.inferTypes"
+         name="Infer Types">
+   </command>
+   <command
+         defaultHandler="org.safe4i.usf.safetyModeller.ui.handler.CleanModelHandler"
+         id="org.safe4i.usf.safetyModeller.ui.command.cleanModel"
+         name="Clean Model">
+   </command>
+   <command
+         defaultHandler="org.safe4i.usf.safetyModeller.ui.handler.GenerateTransformationBodyHandler"
+         id="org.safe4i.usf.safetyModeller.ui.showTransformation"
+         name="Show Transformation">
+   </command>
+   <command
+         defaultHandler="org.safe4i.usf.safetyModeller.ui.handler.ExecuteTransformationHandler"
+         id="org.safe4i.usf.safetyModeller.ui.executeTransformation"
+         name="Execute Transformation">
+   </command>
+</extension>
+
+
+<extension
+      point="org.eclipse.eef.ide.ui.eefLifecycleManagerProvider">
+   <descriptor
+         class="org.safe4i.usf.safetyModeller.ui.views.StereoTypesAndParameterWidgetManagerProvider"
+         description="%stereoTypesAndParameterWidgetManagerProvider.Description"
+         id="org.safe4i.usf.safetyModeller.ui.ext.widget.streotypesAndParameter"
+         label="%stereoTypesAndParameterWidgetManagerProvider.Label">
+   </descriptor>
+</extension>
+
+</plugin>

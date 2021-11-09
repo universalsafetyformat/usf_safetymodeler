@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.0"?>
+
+<!--
+-->
+
+<plugin>
+
+   <extension point="org.eclipse.emf.ecore.generated_package">
+      <!-- @generated USF_transformation -->
+      <package
+            uri="https://www.universalsafetyformat.org/transformation"
+            class="org.safe4i.usf.model.transformation.TransformationPackage"
+            genModel="model/USF_transformation.xcore"/>
+   </extension>
+
+</plugin>

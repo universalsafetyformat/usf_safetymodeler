@@ -1,0 +1,237 @@
+/**
+ * Copyright (c) 2021 FZI Forschungszentrum Informatik (www.fzi.de) and others.
+ * This program and the accompanying materials are made available under the
+ * terms of the Eclipse Public License 2.0 which is available at
+ * http://www.eclipse.org/legal/epl-2.0.
+ * 
+ * SPDX-License-Identifier: EPL-2.0
+ */
+modeltype USF "strict" uses common('https://www.universalsafetyformat.org/common');
+modeltype USF_Block "strict" uses block('https://www.universalsafetyformat.org/block');
+modeltype USF_Template "strict" uses portTemplate('https://www.universalsafetyformat.org/portTemplate');
+
+transformation TypeInference(inout usf_model : USF);
+
+property root : Model;
+property failOnError : Boolean = false;
+
+main() {
+	root := usf_model.objectsOfType(Model)->any(true);
+	log("Removing all exsiting template assignments...");
+	usf_model.objectsOfType(TemplateAssignment)->delete();
+	log("Infering types...\n");
+	usf_model.objectsOfType(BlockType)->inferTypes();
+	log("\nDone!");
+}
+
+mapping BlockType::inferTypes() 
+when { self.containsTemplate() }
+{
+	log("Processing: " + self.name.oclAsType(String));	
+	
+	var graph := self.createGraph();	
+	graph->keys()->select(t | t.context <> null)->forEach(templateKey) {
+		var res := graph->reachable(templateKey, Set{templateKey});
+		if (res->isEmpty()) {
+			error("\tNo solutions found for " + templateKey.prettyPrint());
+		} elif (res->size() > 1) {
+			error("\tTemplate solution for " + templateKey.prettyPrint() + " is ambigous", res.name);
+		} else {
+			log("\t" + templateKey.prettyPrint() + " => " + res->any(true).name.toString());
+			root.content += templateKey.context.xmap addTemplateAssignment(templateKey.type.oclAsType(TemplateType), res->any(true));
+		}
+	}
+}
+
+mapping Block::addTemplateAssignment(tType : TemplateType, assignedType : DomainType) : TemplateAssignment {
+	context := self;
+	templateType := tType;
+	resolvedType := assignedType;
+}
+
+query BlockType::containsTemplate() : Boolean {
+	return self.blocks.type.oclAsType(BlockType).dataFlowPorts->exists(p | p.type.flattenType()->exists(t| t.oclIsTypeOf(TemplateType)))
+}
+
+helper DomainType::flattenType() : Set(DomainType) {
+	if (self.oclIsKindOf(ArrayType)) {
+		return Set{self, self.oclAsType(ArrayType).type};
+	} elif (self.oclAsType(StructType)) {
+		return Set{self}->union(self.oclAsType(StructType).members.type.flattenType()->asSet());
+	} endif;
+	return Set{self};
+}
+
+query DomainType::isTemplateType() : Boolean {
+	return self.oclIsKindOf(TemplateType)
+}
+
+
+///////////////////////////////////////
+//           Helper Funtions         //
+///////////////////////////////////////
+
+helper TemplateAssignment::delete() {
+	usf_model.removeElement(self);
+}
+
+helper error(msg : String) {
+	error(msg, null);
+}
+
+helper error(msg : String, obj : OclAny) {
+	log("ERROR: " + msg, obj);
+	if (failOnError) {
+		assert fatal (false);
+	};
+}
+
+query Tuple(type:DomainType, context:Block)::prettyPrint() : String {
+	var name := self.type.name.oclAsType(String);
+	if (self.context = null) {
+		return name
+	} endif;
+	return name + "{" + self.context.name.oclAsType(String) + " : " + self.context.type.name.oclAsType(String) + "}"; 
+}
+
+///////////////////////////////////////
+//           Graph Funtions          //
+///////////////////////////////////////
+
+//Unfortunately typedef are now only internal
+// typedef Key Tuple(type:Type, context:Block);
+// typedef Graph Dict(Key, Set(Key));
+
+query Dict(Tuple(type:DomainType, context:Block), Set(Tuple(type:DomainType, context:Block)))::reachable(
+		key : Tuple(type:DomainType, context:Block), inout visted : Set(Tuple(type:DomainType, context:Block))
+		) : Set(DomainType) {
+	var res := object Set(DomainType){};
+	
+	self->get(key)->forEach(nextKey) {
+		if (nextKey.context = null) {
+			res += nextKey.type;
+		} else {
+			if (not visted->includes(nextKey)) {
+				visted += nextKey;
+				res += self->reachable(nextKey, visted);
+			} endif;
+		} endif;
+	};
+	
+	return res;
+}
+
+query DomainType::getKey(instance : Block) : Tuple(type:DomainType, context:Block) {
+	var context : Block;
+	if (self.isTemplateType() and instance <> null) {
+		context := instance;
+	} endif;
+	return Tuple{type = self, context = context};
+}
+
+helper addConnectionToGraph(
+		  inout graph : Dict(Tuple(type:DomainType, context:Block), Set(Tuple(type:DomainType, context:Block))),
+		  type1 : DomainType, context1 : Block,
+		  type2 : DomainType, context2 : Block) {
+
+	type1.findPairs(type2)->forEach(typePair) {
+		var k1 := typePair.t1.getKey(context1);
+		var k2 := typePair.t2.getKey(context2);
+
+		if (k1.context <> null) {
+			k1.addConnectionToGraph(graph, k2);
+		} endif;
+
+		if (k2.context <> null) {
+			k2.addConnectionToGraph(graph, k1);
+		} endif;
+	};
+}
+
+query DomainType::findPairs(other : DomainType) : Set(Tuple(t1 : DomainType, t2 : DomainType)) {
+	var res := object Set(Tuple(t1 : DomainType, t2 : DomainType)){};
+	var pairValid := false;
+	
+	if (self.isTemplateType() or other.isTemplateType()) {
+		pairValid := true;
+		res += Tuple{t1 = self, t2 = other};
+	} elif (self = other) {	
+		pairValid := true;
+	} else {
+		if (self.oclAsType(ArrayType).length = other.oclAsType(ArrayType).length) {
+			res += self.oclAsType(ArrayType).type.findPairs(other.oclAsType(ArrayType).type);
+			pairValid := true;
+		} endif;
+
+		if (self.oclAsType(StructType).members->size() = other.oclAsType(StructType).members->size()) {
+		    var otherMembers := other.oclAsType(StructType).members;
+			self.oclAsType(StructType).members->forEach(member) {
+				if (otherMembers->select(m | m.name = member.name)->size() <> 1) {
+					error("Type " + other.name.toString() + " doesn't contain ", member);
+				} endif;
+				
+				var otherMember := otherMembers->any(m | m.name = member.name);
+				res += member.type.findPairs(otherMember.type);				
+			};
+			pairValid := true;
+		} endif;
+	} endif;
+	
+	if (not pairValid) {
+		error("Invalid connection between " + self.name.toString() + " and " + other.name.toString());
+	} endif;
+	
+	return res;
+}
+
+helper Tuple(type:DomainType, context:Block)::addNodeToGraph(inout graph : Dict(Tuple(type:DomainType, context:Block), Set(Tuple(type:DomainType, context:Block)))) {
+	graph->put(self, object Set(Tuple(type:DomainType, context:Block)){});
+}
+
+helper Tuple(type:DomainType, context:Block)::addConnectionToGraph(inout graph : Dict(Tuple(type:DomainType, context:Block), Set(Tuple(type:DomainType, context:Block))),
+						key : Tuple(type:DomainType, context:Block)) {
+	if (not graph->hasKey(self)) {
+		self.addNodeToGraph(graph);
+	} endif;
+	if (not graph->hasKey(key)) {
+		key.addNodeToGraph(graph);
+	} endif;
+	
+	var connected := graph->get(self);
+	connected += key;
+	graph->put(self, connected);
+}
+
+mapping AssemblyDataFlowConnection::addConnectionToGraph(inout graph : Dict(Tuple(type:DomainType, context:Block), Set(Tuple(type:DomainType, context:Block)))) {
+	addConnectionToGraph(graph, self.sourcePort.type, self.sourceBlock, self.destinationPort.type, self.destinationBlock);
+}
+
+mapping DelegateDataFlowConnection::addConnectionToGraph(inout graph : Dict(Tuple(type:DomainType, context:Block), Set(Tuple(type:DomainType, context:Block)))) {
+	var context1 : Block = null;
+	var context2 : Block = null;
+	
+	if (self.innerBlock.type.oclAsType(BlockType).dataFlowPorts->includes(self.sourcePort)) { 
+		context1 := self.innerBlock;
+	} elif (self.innerBlock.type.oclAsType(BlockType).dataFlowPorts->includes(self.destinationPort)) {	
+		context2 := self.innerBlock;
+	} else {
+		error("Invalid delagate connection in " + self.container().oclAsType(BlockType).name.toString());
+	} endif;
+    
+	addConnectionToGraph(graph, self.sourcePort.type, context1, self.destinationPort.type, context2);
+}
+
+mapping DataFlowConnection::addConnectionToGraph(inout graph : Dict(Tuple(type:DomainType, context:Block), Set(Tuple(type:DomainType, context:Block))))
+	disjuncts AssemblyDataFlowConnection::addConnectionToGraph, DelegateDataFlowConnection::addConnectionToGraph {};
+
+helper BlockType::createGraph() : Dict(Tuple(type:DomainType, context:Block), Set(Tuple(type:DomainType, context:Block))) {
+	var graph := object Dict(Tuple(type:DomainType, context:Block), Set(Tuple(type:DomainType, context:Block))){};
+	
+	self.dataFlowConnections->addConnectionToGraph(graph);
+	
+	//graph->keys()->forEach(k) {
+	//	log("\t" + k.prettyPrint(), graph->get(k)->asSequence()->prettyPrint());
+	//};
+	
+	return graph;
+}

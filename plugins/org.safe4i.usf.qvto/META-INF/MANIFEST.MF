@@ -1,0 +1,8 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: USF Qvto Transformations
+Bundle-SymbolicName: org.safe4i.usf.qvto;singleton:=true
+Bundle-Version: 0.9.3.qualifier
+Require-Bundle: org.eclipse.core.runtime,
+ org.eclipse.m2m.qvt.oml
+Bundle-ActivationPolicy: lazy

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="ASCII"?>
+<uriMap:MappingContainer xmi:version="2.0" xmlns:xmi="http://www.omg.org/XMI" xmlns:uriMap="http:///www.eclipse.org/m2m/qvt/oml/MModelUriMap/1.0.0">
+  <mapping sourceURI="https://www.universalsafetyformat.org/common" targetURI="platform:/resource/org.safe4i.usf.core/model/USF_common.xcore"/>
+  <mapping sourceURI="https://www.universalsafetyformat.org/block" targetURI="platform:/resource/org.safe4i.usf.core/model/USF_block.xcore"/>
+  <mapping sourceURI="https://www.universalsafetyformat.org/controlflow" targetURI="platform:/resource/org.safe4i.usf.core/model/USF_controlFlow.xcore"/>
+  <mapping sourceURI="https://www.universalsafetyformat.org/portTemplate" targetURI="platform:/resource/org.safe4i.usf.core/model/USF_portTemplate.xcore"/>
+  <mapping sourceURI="https://www.universalsafetyformat.org/errorHandling" targetURI="platform:/resource/org.safe4i.usf.core/model/USF_errorHandling.xcore"/>
+</uriMap:MappingContainer>
