@@ -6,6 +6,10 @@ SafetyModeler is a graphical editor to view and create USF models provided as an
 
 see: https://universalsafetyformat.github.io/tools/safetymodeler/
 
+## USF SafetyModeler p2 update site
+
+https://universalsafetyformat.github.io/usf_safetymodeler_p2/
+
 ## License
 
 This project is licensed under the [Eclipse Public License - v 2.0](./LICENSE).
